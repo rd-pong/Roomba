@@ -7,11 +7,17 @@ from flask import Flask, request, send_from_directory, abort
 ############# IF DEBUG ON PC, QUOTE BELOW###############
 import sys
 import time
-import serial
-import RPi.GPIO as GPIO
+# import serial
+# import RPi.GPIO as GPIO
+
+# todo import local pygcreate2
+sys.path.append("/home/pi/Desktop/2021fall")
 from pycreate2 import Create2
+
 # from random_walk_for_ziyi import random_walk, switch
-from disinfect_main import disinfect, switch
+# sys.path.append("/home/pi/Desktop/2021fall")
+from disinfect_main_api import disinfect, switch
+
 ############# IF DEBUG ON PC, QUOTE ABOVE###############
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -119,9 +125,10 @@ if __name__ == '__main__':
     if sys.getdefaultencoding() != 'utf-8':
         reload(sys)
         sys.setdefaultencoding('utf-8')
-    ser = serial.Serial(port='/dev/ttyUSB0', baudrate=115200)  # 19200
     sysRunning_flag = True
   
+    # ser = serial.Serial(port='/dev/ttyUSB0', baudrate=115200)  # 19200
+
     # todo move below to 'def receiver()' ?
     bot = Create2('/dev/ttyUSB0', 115200)
     time.sleep(0.1)
@@ -130,7 +137,8 @@ if __name__ == '__main__':
   
     # Launch a bash
     # _thread.start_new_thread(random_walk, (bot, ser)) # start random walk
-    _thread.start_new_thread(disinfect, (ser,)) # start disinfect
+    # _thread.start_new_thread(disinfect, (ser,)) # start disinfect
+    _thread.start_new_thread(disinfect, (bot,)) # start disinfect
     ############# IF DEBUG ON PC, QUOTE ABOVE################
     _thread.start_new_thread(connection, ())
     app.run(host="0.0.0.0", port=5000, debug=False)  # blocking
