@@ -71,8 +71,19 @@ def receiver(num, client_socket, client_addr):
             client_socket.send((str(int(battery) / 3000 * 100)[:2] + "%" + "\n").encode())
             if data[:4] == "auto":
                 switch(_pause=False)
+                # # todo: turn on Create2API?
+                # bot = Create2('/dev/ttyUSB0', 115200)
+                # time.sleep(0.1)
+                # bot.start()  # equals to \x80
+                # bot.safe()
+
             else:
                 switch(_pause=True)
+                # # todo: turn off Create2API?
+                # bot.start()  # equals to \x80
+                # bot.safe()
+                # bot.close()
+                # time.sleep(0.1)
         # do something
         if data[:4] == "STOP":
             bot.drive_stop()
@@ -110,10 +121,13 @@ if __name__ == '__main__':
         sys.setdefaultencoding('utf-8')
     ser = serial.Serial(port='/dev/ttyUSB0', baudrate=115200)  # 19200
     sysRunning_flag = True
+  
+    # todo move below to 'def receiver()' ?
     bot = Create2('/dev/ttyUSB0', 115200)
     time.sleep(0.1)
     bot.start()  # equals to \x80
     bot.safe()
+  
     # Launch a bash
     # _thread.start_new_thread(random_walk, (bot, ser)) # start random walk
     _thread.start_new_thread(disinfect, (ser,)) # start disinfect

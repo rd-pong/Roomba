@@ -8,11 +8,11 @@ ser=serial.Serial(port='/dev/ttyS0',
                   bytesize=serial.EIGHTBITS,
                   timeout=1)
 
-# ser.write(b'\x55\x55\x05\x06\x01\x01\x00')
-# time.sleep(5)
+ser.write(b'\x55\x55\x05\x06\x01\x01\x00')
+time.sleep(5)
 
-# ser.write(b'\x55\x55\x05\x06\x02\x01\x00')
-# time.sleep(5)
+ser.write(b'\x55\x55\x05\x06\x02\x01\x00')
+time.sleep(5)
 
 ser.write(b'\x55\x55\x05\x06\x00\x01\x00')
 time.sleep(5)

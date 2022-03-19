@@ -155,6 +155,9 @@ class Create2(object):
 
     # ------------------ Drive Commands ------------------
 
+    def clean(self):
+        self.SCI.write(OPCODES.CLEAN)
+
     def drive_stop(self):
         # self.drive_straight(0)
         self.drive_direct(0,0)

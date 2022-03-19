@@ -11,6 +11,7 @@ roomba = Create2('/dev/ttyUSB0', 115200)
 roomba.start()
 roomba.safe()
 
+
 # showBattery()
 #######################################################
 
@@ -24,10 +25,10 @@ roomba.safe()
 #     if sensors.bumps_wheeldrops[0] or sensors.bumps_wheeldrops[1]:
 #         hit_obstacle = True
 
-# for i in range(40):
-#     sensors = roomba.get_sensors()
-#     print(i, sensors.bumps_wheeldrops[0], sensors.bumps_wheeldrops[1])
-#     time.sleep(0.5)
+for i in range(40):
+    sensors = roomba.get_sensors()
+    print(i, sensors.bumps_wheeldrops[0], sensors.bumps_wheeldrops[1])
+    time.sleep(0.5)
 
 # roomba.drive_direct(150, 150)
 

@@ -39,14 +39,13 @@ def rotate90(clockwise): # rotate 90 deg
             print("Angle Rotated: ", angleRotated)
     roomba.drive_stop()
 """
-
 def rotate90(clockwise):
     if clockwise == 0: # ccw
-        print("Detected, rotate ccw")
+        print("Rotate ccw")
         roomba.drive_direct(DRIVE_SPEED, -DRIVE_SPEED)
         time.sleep(3.1)
     else: # cw
-        print("Detected, rotate cw")
+        print("Rotate cw")
         roomba.drive_direct(-DRIVE_SPEED, DRIVE_SPEED)
         time.sleep(3.1)
     roomba.drive_stop()
@@ -59,13 +58,14 @@ def forwardShort():
     global stopDisinfection
     startTime = time.time()
     roomba.drive_direct(DRIVE_SPEED, DRIVE_SPEED)
-    print("move forward for some time")
+    print("Move forward a short distance")
 
     continueDrive = True
 
     while continueDrive:
         sensors = roomba.get_sensors()
         if sensors.bumps_wheeldrops[0] or sensors.bumps_wheeldrops[1]:
+            print("Obstacle detected, stop disinfection")
             roomba.drive_stop()
             continueDrive = False
             stopDisinfection = True
@@ -78,6 +78,7 @@ def forwardShort():
     drive roomba backword for a short distance
 """
 def backwardShort():
+    print("Move backward a short distance")
     startTime = time.time()
     roomba.drive_direct(-DRIVE_SPEED, -DRIVE_SPEED)
 
@@ -106,6 +107,7 @@ def forwardUntilOutsideTable(): # move forward until outside table based on ToF
     while continueDrive:
         sensors = roomba.get_sensors()
         if sensors.bumps_wheeldrops[0] or sensors.bumps_wheeldrops[1]: # If detect a table leg, we should stop disinfecting
+            print("Obstacle detected, stop disinfection")
             roomba.drive_stop()
             continueDrive = False
             stopDisinfection = True
@@ -134,6 +136,7 @@ def lookForLeg(): # Keep moving forward, and stop when leg is detected
         sensors = roomba.get_sensors()
         # print(sensors.bumps_wheeldrops[0], sensors.bumps_wheeldrops[1])
         if sensors.bumps_wheeldrops[0] or sensors.bumps_wheeldrops[1]: # If leg is detected, stop
+            print("Table leg detected")
             roomba.drive_stop()
             continueDrive = False
 
@@ -142,7 +145,7 @@ def lookForLeg(): # Keep moving forward, and stop when leg is detected
     align to table using ToF sensors
 """
 def alignToTable(): # Align robot to table when facing to it using ToF sensor
-    print("Align to table")
+    print("Align to table ...")
     global stopDisinfection
     
     for _ in range(20):
@@ -153,6 +156,7 @@ def alignToTable(): # Align robot to table when facing to it using ToF sensor
     while continueDrive:
         sensors = roomba.get_sensors()
         if sensors.bumps_wheeldrops[0] or sensors.bumps_wheeldrops[1]:
+            print("Obstacle detected, stop disinfection")
             roomba.drive_stop()
             continueDrive = False
             stopDisinfection = True
@@ -217,14 +221,17 @@ def getLeftTof(): # Measure using left ToF sensor, return 1 if Roomba is under t
     Set arm positions
 """
 def armUp():
-    arm.write(b'\x55\x55\x05\x06\x02\x01\x00') # update position to ID number
+    print("Move robot arm to up position")
+    arm.write(b'\x55\x55\x05\x06\x02\x01\x00')
 
 
 def armDown():
+    print("Move robot arm to down position")
     arm.write(b'\x55\x55\x05\x06\x01\x01\x00')
 
 
 def armStorage():
+    print("Move robot arm to storage position")
     arm.write(b'\x55\x55\x05\x06\x00\x01\x00')
 
 
@@ -304,6 +311,7 @@ def disinfect(_roomba):
                 armDown()
                 time.sleep(5)
                 roomba.clean()
+                print("Set Roomba to CLEAN mode")
                 
                 time.sleep(0.2) # NEED TO MAKE THIOS LONGER TO ALLOW EXIT TABLE 
                 for _ in range(2):
@@ -311,6 +319,7 @@ def disinfect(_roomba):
                 while (robotMode == 1): # Continue to look for table
                     if (getFrontTof() == 1) and (time.time() - lastTableDisinfectTime > 10): # If table detected, go to robotMode 2
                         robotMode = 2
+                        print("Detected Roomba under table")
             
             elif robotMode == 2:
                 # Set to safe mode
@@ -323,16 +332,13 @@ def disinfect(_roomba):
                 alignToTable()
 
                 # STEP 2: Rotate ccw
-                print("initial ccw")
                 rotate90(0) # Rotate ccw after aligning with table
 
                 # STEP 3: Move along table while alinging using ToF sensor, will stop when table leg deteced
-                print("move along table")
                 lookForLeg() # Move along the table until table leg is detected
                 backwardShort()
 
                 # STEP 4: Rotate clockwise to face table again
-                print("rotate cw towards table")
                 rotate90(1) # rotate 90deg cw
                 
                 # STEP 5: Move back a bit to allow alignment in the next step
@@ -370,7 +376,6 @@ def disinfect(_roomba):
                         robotMode = 1
                         break
 
-                
                     # Step 5: Move forward until leaving table, table not detected by front ToF sensor (repeat of step 2)
                     forwardUntilOutsideTable()
                     if stopDisinfection == True:
