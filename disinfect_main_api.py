@@ -11,25 +11,45 @@ DRIVE_SPEED = 50
     drive roomba rotate 90 degrees
     in clockwise direction or counterclockwise direction
 """
+"""
 def rotate90(clockwise): # rotate 90 deg
+    sensors = roomba.get_sensors()
+    time.sleep(0.5)
+    sensors = roomba.get_sensors()
+    time.sleep(0.5)
+    print("---------------------Init angle in register", sensors.angle)
+
     angleRotated = 0 # variable to calculated amount of rotation
     
     if clockwise == 0: # ccw
         print("Detected, rotate ccw")
-        while angleRotated < 100:
+        roomba.drive_direct(DRIVE_SPEED, -DRIVE_SPEED)
+        while angleRotated < 84:
             sensors = roomba.get_sensors()
-            roomba.drive_direct(DRIVE_SPEED, -DRIVE_SPEED)
+            time.sleep(.15)
             angleRotated += abs(sensors.angle)
             print("Angle Rotated: ", angleRotated)
     else: # cw
         print("Detected, rotate cw")
-        while angleRotated < 100:
+        roomba.drive_direct(-DRIVE_SPEED, DRIVE_SPEED)
+        while angleRotated < 84:
             sensors = roomba.get_sensors()
-            roomba.drive_direct(-DRIVE_SPEED, DRIVE_SPEED)
+            time.sleep(.15)
             angleRotated += abs(sensors.angle)
             print("Angle Rotated: ", angleRotated)
     roomba.drive_stop()
+"""
 
+def rotate90(clockwise):
+    if clockwise == 0: # ccw
+        print("Detected, rotate ccw")
+        roomba.drive_direct(DRIVE_SPEED, -DRIVE_SPEED)
+        time.sleep(3.1)
+    else: # cw
+        print("Detected, rotate cw")
+        roomba.drive_direct(-DRIVE_SPEED, DRIVE_SPEED)
+        time.sleep(3.1)
+    roomba.drive_stop()
 
 """
     drive roomba forward for a short distance
@@ -39,14 +59,15 @@ def forwardShort():
     global stopDisinfection
     startTime = time.time()
     roomba.drive_direct(DRIVE_SPEED, DRIVE_SPEED)
+    print("move forward for some time")
 
-    hitObstacle = False
     continueDrive = True
 
-    while not hitObstacle and continueDrive:
+    while continueDrive:
         sensors = roomba.get_sensors()
         if sensors.bumps_wheeldrops[0] or sensors.bumps_wheeldrops[1]:
-            hitObstacle = True
+            roomba.drive_stop()
+            continueDrive = False
             stopDisinfection = True
         if time.time() - startTime > 4:
             roomba.drive_stop()
@@ -150,10 +171,10 @@ def getFrontTof(): # Measure using forward ToF sensor, return 1 if Roomba is und
     mux.disable_all()
     mux.enable_channels(1)
     ToF.start_ranging() # Write configuration bytes to initiate measurement
-    time.sleep(0.5)
+    time.sleep(0.05)
     distance = ToF.get_distance() # Get the result of the measurement from the sensor
-    print(distance)
-    time.sleep(0.5)
+    # print(distance)
+    time.sleep(0.05)
     ToF.stop_ranging()
     # print("Front ToF: ", distance)
     if (distance < 1300): # may need to be adjusted
@@ -203,8 +224,8 @@ def armDown():
     arm.write(b'\x55\x55\x05\x06\x01\x01\x00')
 
 
-def armClean():
-    arm.write(b'\x55\x55\x05\x06\x03\x01\x00')
+def armStorage():
+    arm.write(b'\x55\x55\x05\x06\x00\x01\x00')
 
 
 def switch(_pause):
@@ -255,7 +276,7 @@ ToF.set_distance_mode(2)
 
 
 def disinfect(_roomba):
-    global roomba
+    global roomba, stopDisinfection
     roomba = _roomba
 
     time.sleep(1)
@@ -282,7 +303,7 @@ def disinfect(_roomba):
             # Set to clean mode
                 armDown()
                 time.sleep(5)
-                roomba.drive_direct(DRIVE_SPEED, DRIVE_SPEED)
+                roomba.clean()
                 
                 time.sleep(0.2) # NEED TO MAKE THIOS LONGER TO ALLOW EXIT TABLE 
                 for _ in range(2):
@@ -296,7 +317,6 @@ def disinfect(_roomba):
                 roomba.safe()
                 time.sleep(0.2)
                 armUp()
-                armClean()
             
                 # STEP 1: Align robot to table using ToF sensor
                 backwardShort()
@@ -374,7 +394,11 @@ def disinfect(_roomba):
     except KeyboardInterrupt:
         print("exit")
         roomba.drive_stop()
+        armStorage()
+        time.sleep(5)
+        roomba.safe()
         roomba.close()
+        
 
 
 if __name__ == "__main__":
