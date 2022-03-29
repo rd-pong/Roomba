@@ -51,14 +51,22 @@ configPath = 'graph.pbtxt'
 weightsPath = 'frozen_inference_graph.pb'
 
 net = cv2.dnn_DetectionModel(weightsPath,configPath)
-net.setInputSize(250,250)
-net.setInputScale(1.0/ 90)
-net.setInputMean((90, 90, 90))
+net.setInputSize(320,320)
+net.setInputScale(1.0/ 127.5)
+net.setInputMean((127.5, 127.5, 127.5))
 net.setInputSwapRB(True)
 
 def stop():
 	ser.write(b'\x92\x00\x00\x00\x00')
 	time.sleep(.1)
+	
+def rotate_cw_5():
+        print("cw for 15 sec")
+        startTime = time.time()
+        while time.time() - startTime < 15:
+            time.sleep(1)
+            ser.write(b'\x92\x00\x1E\xFF\xE2')    
+        
   
 def rotate90(clockwise): # rotate 90 deg
 	resetAngle()
@@ -335,9 +343,9 @@ def getObjects(frame,thres,nms,draw=True,objects=[]):
                 
                 if (draw):
                     
-                    cv2.rectangle(frame,box,color=(0,0,255))
-                    cv2.putText(frame,className.upper(),(box[0]+10,box[1]+30),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,255),2)
-                    cv2.putText(frame,str(round(confidence*100,2)),(box[0]+100,box[1]+30), cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,255),2)
+                    #cv2.rectangle(frame,box,color=(0,0,255))
+                    #cv2.putText(frame,className.upper(),(box[0]+10,box[1]+30),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,255),2)
+                    #cv2.putText(frame,str(round(confidence*100,2)),(box[0]+100,box[1]+30), cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,255),2)
                     
                     
                     x_mid = box[0] + box[2]/2 # Calculated and verified to be x midpoint
@@ -391,10 +399,12 @@ lastKeyboardDisinfectTime = -10 # Set to -10s ago
 
 try:
 	while (sysRunning_flag):
-		# View camera
+		#time.sleep(1)
 		_, frame = cap.read()
+		#frame = cv2.flip(frame, -1)
 		result,objectInfo,robotMode = getObjects(frame,0.5,0.2,objects=["keyboard"])
-		cv2.imshow('Output', frame)
+		print("Current robotMode =",robotMode)
+		cv2.imshow('Output', result)
 		#print(found)
 		cv2.waitKey(1)
 		
@@ -402,12 +412,12 @@ try:
 		if robotMode == 1:
 			armDown()
 			print("forward")
-			#ser.write(b'\x92\x00\x2f\x00\x2f') #wheel speed of 2f
+			ser.write(b'\x92\x00\x2f\x00\x2f') #wheel speed of 2f
 		
 		# Keyboard found, keep moving forward
 		elif robotMode == 2:
 			armDown()
-			print("forward found")
+			print("keyboard found, move forward")
 			ser.write(b'\x92\x00\x20\x00\x20') #wheel speed of 20
 			
 		# Steer right
@@ -415,18 +425,18 @@ try:
 			armDown()
 			rotate5(1)
 			print("rotate cw")
-			rotate90(1)
+			#rotate90(1)
 			ser.write(b'\x92\x00\x1E\xFF\xE2') # rotate counterclockwise
-			#time.sleep(2)
+			time.sleep(2)
 			
 		# Steer left
 		elif robotMode == 4:
 			armDown()
 			rotate5(0)
 			print("rotate ccw")
-			rotate90(0)
+			#rotate90(0)
 			ser.write(b'\x92\xFF\xE2\x00\x1E') # rotate clockwise
-			#time.sleep(2)
+			time.sleep(2)
 			
 		# Disinfect
 		elif robotMode == 5 and time.time() - lastKeyboardDisinfectTime > 5:
@@ -434,8 +444,10 @@ try:
 			time.sleep(0.5)
 			print("cleaning with arm for 6 sec")
 			armClean()
-			#time.sleep(6)
+			time.sleep(6)
+			rotate_cw_5()
 			lastKeyboardDisinfectTime = time.time()
+
 
 except KeyboardInterrupt:
 	stop()

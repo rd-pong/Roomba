@@ -1,21 +1,22 @@
-import binascii
 import serial
 import time
-import RPi.GPIO as GPIO
 import qwiic_vl53l1x
 import qwiic_tca9548a
-from pycreate2 import Create2
 
 def stop():
-    roomba.write(b'\x92\x00\x00\x00\x00')
+    roomba.write(b'\x91\x00\x00\x00\x00')
     time.sleep(.1)
 
+"""
+    drive roomba rotate 90 degrees
+    in clockwise direction or counterclockwise direction
+"""
 def rotate90(clockwise): # rotate 90 deg
     resetAngle()
     angleRotated = 0 # variable to calculated amount of rotation
     if clockwise == 0: # ccw
-        print("Detected, rotate ccw")
-        roomba.write(b'\x92\x00\x1E\xFF\xE2') # rotate counterclockwise
+        print("Rotate ccw")
+        roomba.write(b'\x91\x00\x1E\xFF\xE2') # rotate counterclockwise
         while (angleRotated < 90) and not pause:
             # Send commmand to get angle rotation
             roomba.write(b'\x8E\x14') # number 20 = \x14 angle
@@ -27,8 +28,8 @@ def rotate90(clockwise): # rotate 90 deg
                 angleRotated = angleRotated + int(response[1], 16)
                 # print(angleRotated)
     else: # cw
-        print("Detected, rotate cw")
-        roomba.write(b'\x92\xFF\xE2\x00\x1E') # rotate clockwise
+        print("Rotate cw")
+        roomba.write(b'\x91\xFF\xE2\x00\x1E') # rotate clockwise
         while (angleRotated < 90) and not pause:
             # Send commmand to get angle rotation
             roomba.write(b'\x8E\x14') # number 20 = \x14 angle
@@ -46,10 +47,14 @@ def rotate90(clockwise): # rotate 90 deg
                 # print(angleRotated)
     stop()
 
+
+"""
+    drive roomba backword for a short distance
+"""
 def forwardShort():
     global stopDisinfection
     startTime = time.time()
-    roomba.write(b'\x92\x00\x2f\x00\x2f') #wheel speed of 2f
+    roomba.write(b'\x91\x00\x2f\x00\x2f') #wheel speed of 2f
         #print("move forward for some time")
     
     move = 1 # Variable on whether we should keep moving forward
@@ -65,7 +70,7 @@ def forwardShort():
      
 def backwardShort():
     startTime = time.time()
-    roomba.write(b'\x92\xFF\xD8\xFF\xD8') # Move wheels backward
+    roomba.write(b'\x91\xFF\xD8\xFF\xD8') # Move wheels backward
     
     move = 1 # Variable on whether we should keep moving forward
 
@@ -74,11 +79,15 @@ def backwardShort():
             stop()
             move = 0
 
-def forwardUntilSensor(): # move forward until outside table based on ToF
+
+"""
+    drive roomba forward while under the table
+    until outside table based on ToF measured distance
+"""
+def forwardUntilOutsideTable(): # move forward until outside table based on ToF
     global stopDisinfection
     print("Move forward until outside table based on ToF")
-    
-    roomba.write(b'\x92\x00\x35\x00\x35') #wheel speed of 8f
+    roomba.write(b'\x91\x00\x2f\x00\x2f') #wheel speed of 8f
 
     startTime2 = time.time() # Stopwatch to measure time since function first started
     
@@ -107,7 +116,7 @@ def forwardUntilSensor(): # move forward until outside table based on ToF
                 move = 0
 
 def lookForLeg(): # Keep moving forward, and stop when leg is detected
-    roomba.write(b'\x92\x00\x35\x00\x35') #The different in left and right wheel is because of the drift caused by uneven floor
+    roomba.write(b'\x91\x00\x35\x00\x35') #The different in left and right wheel is because of the drift caused by uneven floor
     print("Looking for leg")
     move = 1 # Variable on whether we should keep moving forward
     while (move):
@@ -117,11 +126,11 @@ def lookForLeg(): # Keep moving forward, and stop when leg is detected
         
         # Use ToF to maintain moving along table. RightToF = 1 and Left ToF = 0
         # if (getRightTof() == 0 and getLeftTof() == 0): # If right ToF no longer detects table, slow down right wheel to steer right
-        #     roomba.write(b'\x92\x00\x20\x00\x2f')
+        #     roomba.write(b'\x91\x00\x20\x00\x2f')
         # elif (getLeftTof() == 1 and getRightTof() == 1): # If left ToF detects table, slow down left wheel to steer left
-        #     roomba.write(b'\x92\x00\x2f\x00\x20')
+        #     roomba.write(b'\x91\x00\x2f\x00\x20')
         # else:
-        roomba.write(b'\x92\x00\x35\x00\x35')
+        roomba.write(b'\x91\x00\x35\x00\x35')
 
 def alignToTable(): # Align robot to table when facing to it using ToF sensor
     print("Align to table")
@@ -132,6 +141,7 @@ def alignToTable(): # Align robot to table when facing to it using ToF sensor
     move = 1 # Variable on whether we should keep moving forward
     while (move):
         if (getBumpSensor() == 1 or getProxSensorAll() == 1):
+            print("Obstacle detected, stop disinfection")
             stop()
             move = 0
             stopDisinfection = True
@@ -139,15 +149,15 @@ def alignToTable(): # Align robot to table when facing to it using ToF sensor
             stop()
             move = 0
         elif (getRightTof() == 1 and getLeftTof() == 0): # If right ToF detects table, move only left wheel
-            roomba.write(b'\x92\x00\x00\x00\x2f')
+            roomba.write(b'\x91\x00\x00\x00\x2f')
         elif (getRightTof() == 0 and getLeftTof() == 1): # If left ToF detects table, move only right wheel
-            roomba.write(b'\x92\x00\x2f\x00\x00')
+            roomba.write(b'\x91\x00\x2f\x00\x00')
         else: # no ToF sensor detects table yet
-            roomba.write(b'\x92\x00\x2f\x00\x2f')
+            roomba.write(b'\x91\x00\x2f\x00\x2f')
 
 def getFrontTof(): # Measure using forward ToF sensor, return 1 if Roomba is under table
     mux.disable_all()
-    mux.enable_channels(0)
+    mux.enable_channels(1)
     ToF.start_ranging() # Write configuration bytes to initiate measurement
     time.sleep(.005)
     distance = ToF.get_distance() # Get the result of the measurement from the sensor
@@ -221,21 +231,24 @@ def resetDistance(): # Reset distance calculation
     while roomba.inWaiting() != 0:
         roomba.read()
 
-# Set arm positions
+
+"""
+    Set arm positions
+"""
 def armUp():
-    arm.write(b'\x55\x55\x05\x06\x02\x01\x00') # update position to ID number
+    print("Move robot arm to up position")
+    arm.write(b'\x55\x55\x05\x06\x02\x01\x00')
+
 
 def armDown():
+    print("Move robot arm to down position")
     arm.write(b'\x55\x55\x05\x06\x01\x01\x00')
 
-def armClean():
-    arm.write(b'\x55\x55\x05\x06\x03\x01\x00')
 
-# def armRight():
-#     arm.write(b'\x55\x55\x05\x06\position\x01\x00')
+def armStorage():
+    print("Move robot arm to storage position")
+    arm.write(b'\x55\x55\x05\x06\x00\x01\x00')
 
-# def armStop():
-#     arm.write(b'\x55\x55\x02\x07')
 
 def switch(_pause):
     global pause
@@ -244,7 +257,7 @@ def switch(_pause):
 
 ########################################################################
 
-pause=True
+pause = True
 
 #LESSON: MUST PUT INTO SAFE MODE BEFORE STOP COMMAND 
 # roomba=serial.Serial(port='/dev/ttyUSB0',baudrate=115200)
@@ -256,7 +269,7 @@ arm=serial.Serial(port='/dev/ttyS0',baudrate=9600,parity=serial.PARITY_NONE,stop
 # TOF sensor setup
 mux = qwiic_tca9548a.QwiicTCA9548A()
 mux.disable_all()
-mux.enable_channels(0)
+mux.enable_channels(1)
 ToF = qwiic_vl53l1x.QwiicVL53L1X()
 ToF.sensor_init()
 if (ToF.sensor_init() == None):                  # Begin returns 0 on a good init
@@ -280,7 +293,6 @@ def disinfect(_roomba):
     roomba = _roomba
     roomba.flushOutput()
 
-    GPIO.setmode(GPIO.BCM)   #set up GPIO pins
 
     time.sleep(1)
     roomba.write(b'\x80') #start
@@ -320,23 +332,19 @@ def disinfect(_roomba):
                 roomba.write(b'\x83')#safe mode
                 time.sleep(0.2)
                 armUp()
-                armClean()
             
                 # STEP 1: Align robot to table using ToF sensor
                 backwardShort()
                 alignToTable()
 
                 # STEP 2: Rotate ccw
-                print("initial ccw")
                 rotate90(0) # Rotate ccw after aligning with table
 
                 # STEP 3: Move along table while alinging using ToF sensor, will stop when table leg deteced
-                print("move along table")
                 lookForLeg() # Move along the table until table leg is detected
                 backwardShort()
 
                 # STEP 4: Rotate clockwise to face table again
-                print("rotate cw towards table")
                 rotate90(1) # rotate 90deg cw
                 
                 # STEP 5: Move back a bit to allow alignment in the next step
@@ -356,7 +364,7 @@ def disinfect(_roomba):
                         break
 
                     # STEP 2: Move forward until leaving table, table not detected by front ToF sensor
-                    forwardUntilSensor() # Should be moving forward until leaving table, but ToF not available yet
+                    forwardUntilOutsideTable() # Should be moving forward until leaving table, but ToF not available yet
                     if stopDisinfection == True:
                         robotMode = 1
                         break
@@ -378,7 +386,7 @@ def disinfect(_roomba):
 
                 
                     # Step 5: Move forward until leaving table, table not detected by front ToF sensor (repeat of step 2)
-                    forwardUntilSensor()
+                    forwardUntilOutsideTable()
                     if stopDisinfection == True:
                         robotMode = 1
                         break
@@ -403,12 +411,12 @@ def disinfect(_roomba):
         time.sleep(0.2)
         roomba.write(b'\x83')#safe mode, must be in safe mode before stopping
         time.sleep(0.2)
-        roomba.write(b'\x92\x00\x00\00\00') #wheel speed of 0
+        roomba.write(b'\x91\x00\x00\00\00') #wheel speed of 0
         time.sleep(0.2)
+        armStorage()
         #stop command when we are done working
         roomba.write(b'\xAD') #stop
         roomba.close()
-        GPIO.cleanup()
 
         
     # print("exit")
@@ -416,7 +424,7 @@ def disinfect(_roomba):
     # time.sleep(0.2)
     # roomba.write(b'\x83')#safe mode, must be in safe mode before stopping
     # time.sleep(0.2)
-    # roomba.write(b'\x92\x00\x00\00\00') #wheel speed of 0
+    # roomba.write(b'\x91\x00\x00\00\00') #wheel speed of 0
     # time.sleep(0.2)
     # #stop command when we are done working
     # roomba.write(b'\xAD') #stop

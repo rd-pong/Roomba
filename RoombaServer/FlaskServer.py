@@ -10,12 +10,11 @@ import time
 # import serial
 # import RPi.GPIO as GPIO
 
-# todo import local pygcreate2
-sys.path.append("/home/pi/Desktop/2021fall")
+# import local pygcreate2
 from pycreate2 import Create2
 
 # from random_walk_for_ziyi import random_walk, switch
-# sys.path.append("/home/pi/Desktop/2021fall")
+sys.path.append("/home/pi/Desktop/2021fall")
 from disinfect_main_api import disinfect, switch
 
 ############# IF DEBUG ON PC, QUOTE ABOVE###############

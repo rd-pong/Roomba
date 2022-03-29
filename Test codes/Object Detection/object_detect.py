@@ -14,9 +14,9 @@ configPath = 'graph.pbtxt'
 weightsPath = 'frozen_inference_graph.pb'
 
 net = cv2.dnn_DetectionModel(weightsPath,configPath)
-net.setInputSize(250,250)#original 320, 320
-net.setInputScale(1.0/ 80)#original 1.0/127.5
-net.setInputMean((80, 80, 80))#original 127.5, 127.5, 127.5
+net.setInputSize(320,320)#original 320, 320
+net.setInputScale(1.0/ 127.5)#original 1.0/127.5
+net.setInputMean((127.5, 127.5, 127.5))#original 127.5, 127.5, 127.5
 net.setInputSwapRB(True)
 
 def getObjects(frame,thres,nms,draw=True,objects=[]):

@@ -27,10 +27,10 @@ def rotate90(clockwise): # rotate 90 deg
     if clockwise == 0: # ccw
         print("Detected, rotate ccw")
         roomba.drive_direct(DRIVE_SPEED, -DRIVE_SPEED)
-        while angleRotated < 900000000:
+        while angleRotated < 90:
             sensors = roomba.get_sensors()
             print(sensors.angle)
-            time.sleep(.2)
+            time.sleep(.1)
             angleRotated += abs(sensors.angle)
             print("Angle Rotated: ", angleRotated)
     else: # cw
@@ -38,7 +38,7 @@ def rotate90(clockwise): # rotate 90 deg
         roomba.drive_direct(-DRIVE_SPEED, DRIVE_SPEED)
         while angleRotated < 90:
             sensors = roomba.get_sensors()
-            time.sleep(.2)
+            time.sleep(.1)
             angleRotated += abs(sensors.angle)
             # print("Angle Rotated: ", angleRotated)
     roomba.drive_stop()
@@ -49,5 +49,5 @@ def rotate90time():
     roomba.drive_stop()
 
 ####################################################################################
-rotate90time() # ccw
+rotate90(0) # ccw
 roomba.drive_stop()
