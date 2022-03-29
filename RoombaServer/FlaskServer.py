@@ -67,43 +67,25 @@ def receiver(num, client_socket, client_addr):
         print("Connection", num, client_addr, data)
         ############# IF DEBUG ON PC, QUOTE BELOW###############
         if data[:4] == "auto" or data[:4] == "manu":
-            # ser.write('\x8E\x1A')
-            # battery = ser.read(2)
-            # print(battery)
-            # client_socket.send(("ACK: " + data + "\n").encode())
             sensors = bot.get_sensors()
             battery = sensors.battery_capacity
             client_socket.send((str(int(battery) / 3000 * 100)[:2] + "%" + "\n").encode())
             if data[:4] == "auto":
                 switch(_pause=False)
-                # # todo: turn on Create2API?
-                # bot = Create2('/dev/ttyUSB0', 115200)
-                # time.sleep(0.1)
-                # bot.start()  # equals to \x80
-                # bot.safe()
-
             else:
                 switch(_pause=True)
-                # # todo: turn off Create2API?
-                # bot.start()  # equals to \x80
-                # bot.safe()
-                # bot.close()
-                # time.sleep(0.1)
+
         # do something
         if data[:4] == "STOP":
             bot.drive_stop()
-        if data[:4] == "FWRD":
-            # print("forward")
+        elif data[:4] == "FWRD":
             bot.drive_direct(4*int(data[4:]), 4*int(data[4:]))
-            # ser.write(b'\x92\x00\x35\x00\x35')
-        if data[:4] == "BWRD":
+        elif data[:4] == "BWRD":
             bot.drive_direct(-4*int(data[4:]), -4*int(data[4:]))
-        if data[:4] == "RGHT":
+        elif data[:4] == "RGHT":
             bot.drive_direct(-2*int(data[4:]), 2*int(data[4:]))
-            # ser.write(b'\x92\xFF\xC1\x00\x3F')
-        if data[:4] == "LEFT":
+        elif data[:4] == "LEFT":
             bot.drive_direct(2*int(data[4:]), -2*int(data[4:]))
-            # ser.write(b'\x92\x00\x3F\xFF\xC1')
         ############# IF DEBUG ON PC, QUOTE ABOVE###############
 
 
