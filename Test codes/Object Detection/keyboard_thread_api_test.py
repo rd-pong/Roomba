@@ -23,11 +23,11 @@ from pycreate2 import Create2
 
 # Arm setup
 arm=serial.Serial(port='/dev/ttyS0',
-				  baudrate=9600,
-				  parity=serial.PARITY_NONE,
-				  stopbits=serial.STOPBITS_ONE,
-				  bytesize=serial.EIGHTBITS,
-				  timeout=1)
+                  baudrate=9600,
+                  parity=serial.PARITY_NONE,
+                  stopbits=serial.STOPBITS_ONE,
+                  bytesize=serial.EIGHTBITS,
+                  timeout=1)
 
 
 
@@ -52,42 +52,62 @@ net.setInputSwapRB(True)
 
 
 """
-	rotate 5 degress
-	in clockwise or counterclockwise direction
+    rotate 5 degress
+    in clockwise or counterclockwise direction
 """
 def rotate5(clockwise):
-	angleRotated = 0
-	
-	if clockwise == 0:	#ccw
-		print("Rotating ccw")
-		roomba.drive_direct(15, -15)
-		while angleRotated < 5 :
-			sensors = roomba.get_sensors()
-			angleRotated += abs(sensors.angle)
-			print("Angle rotate:", angleRotated)
+    angleRotated = 0
+    
+    if clockwise == 0:	#ccw
+        print("Rotating ccw")
+        roomba.drive_direct(15, -15)
+        while angleRotated < 5 :
+            sensors = roomba.get_sensors()
+            angleRotated += abs(sensors.angle)
+            print("Angle rotate:", angleRotated)
 
-	else:	#cw
-		print("Rotating cw")
-		roomba.drive_direct(-15, 15)
-		while angleRotated < 5:
-			sensors = roomba.get_sensors()
-			angleRotated += abs(sensors.angle)
-			print("Angle rotated: ", angleRotated)
+    else:	#cw
+        print("Rotating cw")
+        roomba.drive_direct(-15, 15)
+        while angleRotated < 5:
+            sensors = roomba.get_sensors()
+            angleRotated += abs(sensors.angle)
+            print("Angle rotated: ", angleRotated)
 
-	roomba.drive_stop()
+    roomba.drive_stop()
 
+def rotate180(clockwise):
+    angleRotated = 0
+    
+    if clockwise == 0:	#ccw
+        print("Rotating ccw")
+        roomba.drive_direct(15, -15)
+        while angleRotated < 180 :
+            sensors = roomba.get_sensors()
+            angleRotated += abs(sensors.angle)
+            print("Angle rotate:", angleRotated)
+
+    else:	#cw
+        print("Rotating cw")
+        roomba.drive_direct(-15, 15)
+        while angleRotated < 180:
+            sensors = roomba.get_sensors()
+            angleRotated += abs(sensors.angle)
+            print("Angle rotated: ", angleRotated)
+
+    roomba.drive_stop()
 
 def rotateCCW_10s():
-	start_time = time.time()
-	print("Rotating ccw for 5 sec")
-	roomba.drive_direct(20, -20)
+    start_time = time.time()
+    print("Rotating ccw for 5 sec")
+    roomba.drive_direct(20, -20)
 
-	continue_drive = True
+    continue_drive = True
 
-	while continue_drive:
-		if time.time() - start_time > 5:
-			roomba.drive_stop()
-			continue_drive = False
+    while continue_drive:
+        if time.time() - start_time > 10:
+            roomba.drive_stop()
+            continue_drive = False
 
 
 # Set arm positions
@@ -110,28 +130,42 @@ def armSearchKeyboard():
     arm.write(b'\x55\x55\x05\x06\x03\x01\x00')
 
 def armCleanKeyboardStart():
-    print("Move robot arm to search keyboard position")
+    print("Move robot arm to clean keyboard start position")
     arm.write(b'\x55\x55\x05\x06\x04\x01\x00')
 
 def armCleanKeyboardEnd():
-    print("Move robot arm to search keyboard position")
+    print("Move robot arm to clean keyboard end position")
     arm.write(b'\x55\x55\x05\x06\x05\x01\x00')
 
 def cleanKeybord():
-	print("Cleaning with arm for 6 sec")
-	# armClean()
-	cleaning_time = time.time()
-	while time.time() - cleaning_time < 6:
-		print("Cleaning ...")
-	print("Finish cleanig")
-	global lastKeyboardDisinfectTime
-	lastKeyboardDisinfectTime = time.time()
-	global is_cleaning_fin
-	is_cleaning_fin = True
-	print("Rotate to search other keyboard")
-	rotateCCW_10s()
-	
-	
+    print("Cleaning ...")
+    armCleanKeyboardStart()
+    time.sleep(5)
+
+    armCleanKeyboardEnd()
+    time.sleep(5)
+
+    armSearchKeyboard()
+    time.sleep(5)
+
+    # armUp()
+    # time.sleep(5)
+
+    # rotate180(1)
+    rotateCCW_10s()
+
+    # armSearchKeyboard()
+    # time.sleep(5)
+
+    print("Finish cleanig")
+    global lastKeyboardDisinfectTime
+    lastKeyboardDisinfectTime = time.time()
+    global is_cleaning_fin
+    is_cleaning_fin = True
+    print("Rotate to search other keyboard")
+    
+    
+    
 def getObjects(frame,thres,nms,draw=True,objects=[]):
     classIds, confs, bbox = net.detect(frame,confThreshold=thres,nmsThreshold=nms)
     robotMode = 1
@@ -158,7 +192,7 @@ def getObjects(frame,thres,nms,draw=True,objects=[]):
                     # If x_mid < 100, turn one dir, if x_mid > 220, turn another dir
                     if x_mid < 100:
                         robotMode = 4	# Steer left
-				
+                
                     elif x_mid > 220:
                         robotMode = 3	# Steer right
                     
@@ -178,124 +212,131 @@ rotate_ccw_thread = Thread(target = rotate5, args=(1,))
 
 
 def disinfect_keyboard(_roomba):
-	global cleaning_thread
-	global rotate_cw_thread
-	global rotate_ccw_thread
-	global roomba
-	roomba = _roomba
+    global cleaning_thread
+    global rotate_cw_thread
+    global rotate_ccw_thread
+    global roomba
+    roomba = _roomba
 
-	GPIO.setmode(GPIO.BCM)   #set up GPIO pins
-	#GPIO.setup(27, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-	#GPIO.setup(trigPin, GPIO.OUT, initial = GPIO.LOW)
-	#GPIO.setup(echoPin, GPIO.IN)
+    # GPIO.setmode(GPIO.BCM)   #set up GPIO pins
+    #GPIO.setup(27, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    #GPIO.setup(trigPin, GPIO.OUT, initial = GPIO.LOW)
+    #GPIO.setup(echoPin, GPIO.IN)
 
-	time.sleep(1)
-	roomba.start()
-	print("Starting keyboard disinfectiion process ...")
-	time.sleep(1)
-	roomba.safe()	# safe mode
-	time.sleep(0.5)
+    time.sleep(1)
+    roomba.start()
+    print("Starting keyboard disinfectiion process ...")
+    time.sleep(1)
+    roomba.safe()	# safe mode
+    time.sleep(0.5)
 
-	cap = cv2.VideoCapture(-1)
-	cap.set(3, 320)
-	cap.set(4, 320)
+    armSearchKeyboard()
+    time.sleep(5)
 
-	# robotMode: 1 == wander and look for table, 2 == initial setup when detecting a table, 3 == disinfect table
-	robotMode = 1 # If True, robot will wander in cleanmode to look for table. if false will disinfect table
+    cap = cv2.VideoCapture(-1)
+    cap.set(3, 320)
+    cap.set(4, 320)
 
-	# stopDisinfection = False # set to True if entire table has been disinfected, verified by bump and prox sensors, or if error is predicted
-	lastKeyboardDisinfectTime = -100 # Set to -10s ago
+    # robotMode: 1 == wander and look for table, 2 == initial setup when detecting a table, 3 == disinfect table
+    robotMode = 1 # If True, robot will wander in cleanmode to look for table. if false will disinfect table
 
-	is_cleaning = False
-	is_cleaning_fin = True
+    # stopDisinfection = False # set to True if entire table has been disinfected, verified by bump and prox sensors, or if error is predicted
+    lastKeyboardDisinfectTime = -100 # Set to -10s ago
 
-	try:
-		while True:
+    is_cleaning = False
+    is_cleaning_fin = True
 
-			# View camera
-			_, frame = cap.read()
-			lastMode = robotMode
-			result,objectInfo,robotMode = getObjects(frame,0.5,0.2,objects=["keyboard"])
-			if is_cleaning:
-				robotMode = lastMode
-			cv2.imshow('Output', frame)
-			#print(found)
-			cv2.waitKey(1)
-		
-			# No keyboard found
-			if robotMode == 1:
-				# armDown()
-				print("forward")
-				roomba.drive_direct(50, 50)
-		
-			# Keyboard found, keep moving forward
-			elif robotMode == 2:
-				# armDown()
-				print("Found keyboarad, keep forward")
-				roomba.drive_direct(20, 20) #wheel speed of 20
-			
-			# Steer right
-			elif robotMode == 3:
-				# armDown()
-				print("rotate cw")
-				if not rotate_cw_thread.is_alive():
-					try:
-						rotate_cw_thread.start()
-					except RuntimeError:
-						rotate_cw_thread = Thread(target = rotate5, args=(1,))
-						rotate_cw_thread.start()
-				time.sleep(0.5)
-			
-			# Steer left
-			elif robotMode == 4:
-				# armDown()
-				print("rotate ccw")
-				if not rotate_ccw_thread.is_alive():
-					try:
-						rotate_ccw_thread.start()
-					except RuntimeError:
-						rotate_ccw_thread = Thread(target = rotate5, args=(0,))
-						rotate_ccw_thread.start()
-				time.sleep(0.5)
-			
-			# Disinfect
-			elif robotMode == 5 and time.time() - lastKeyboardDisinfectTime > 15 and is_cleaning_fin:
-				is_cleaning_fin = False
-				print("Near the keyboard, stop...")
-				roomba.drive_stop()
-				if not cleaning_thread.is_alive():
-					try:
-						cleaning_thread.start()
-					except RuntimeError:
-						cleaning_thread = Thread(target = cleanKeybord)
-						cleaning_thread.start()
+    try:
+        while True:
+            print("Robot mode: ", robotMode)
 
-				time.sleep(13)
-				lastKeyboardDisinfectTime = time.time()
-			
-			
+            # View camera
+            _, frame = cap.read()
+            lastMode = robotMode
+            result,objectInfo,robotMode = getObjects(frame,0.5,0.2,objects=["keyboard"])
+            if is_cleaning:
+                robotMode = lastMode
+            cv2.imshow('Output', frame)
+            #print(found)
+            cv2.waitKey(1)
+        
+            # No keyboard found
+            if robotMode == 1:
+                # armSearchKeyboard()
+                # time.sleep(5)
+                print("forward")
+                roomba.drive_direct(50, 50)
+        
+            # Keyboard found, keep moving forward
+            elif robotMode == 2:
+                # armSearchKeyboard()
+                # time.sleep(5)
+                print("Found keyboarad, keep forward")
+                roomba.drive_direct(20, 20) #wheel speed of 20
+            
+            # Steer right
+            elif robotMode == 3:
+                # armSearchKeyboard()
+                # time.sleep(5)
+                print("rotate cw")
+                if not rotate_cw_thread.is_alive():
+                    try:
+                        rotate_cw_thread.start()
+                    except RuntimeError:
+                        rotate_cw_thread = Thread(target = rotate5, args=(1,))
+                        rotate_cw_thread.start()
+                time.sleep(0.5)
+            
+            # Steer left
+            elif robotMode == 4:
+                # armSearchKeyboard()
+                # time.sleep(5)
+                print("rotate ccw")
+                if not rotate_ccw_thread.is_alive():
+                    try:
+                        rotate_ccw_thread.start()
+                    except RuntimeError:
+                        rotate_ccw_thread = Thread(target = rotate5, args=(0,))
+                        rotate_ccw_thread.start()
+                time.sleep(0.5)
+            
+            # Disinfect
+            elif robotMode == 5 and time.time() - lastKeyboardDisinfectTime > 15 and is_cleaning_fin:
+                is_cleaning_fin = False
+                print("Near the keyboard, stop...")
+                roomba.drive_stop()
+                if not cleaning_thread.is_alive():
+                    try:
+                        cleaning_thread.start()
+                    except RuntimeError:
+                        cleaning_thread = Thread(target = cleanKeybord)
+                        cleaning_thread.start()
 
-	except KeyboardInterrupt:
-		print("Exit ...")
-		armStop()
-		GPIO.cleanup() # clean up GPIO on CTRL+C exit
-    	#safe mode then stop
-		roomba.drive_stop()
-		roomba.close()
+                time.sleep(13)
+                lastKeyboardDisinfectTime = time.time()
+            
+            
+
+    except KeyboardInterrupt:
+        print("Exit - from keyboard")
+        roomba.drive_stop()
+        roomba.safe()
+        armStorage()
+        time.sleep(5)
 
     
-	# print("exit")
-	# #safe mode then stop
-	# time.sleep(0.2)
-	# ser.write(b'\x83')#safe mode, must be in safe mode before stopping
-	# time.sleep(0.2)
-	# ser.write(b'\x92\x00\x00\00\00') #wheel speed of 0
-	# time.sleep(0.2)
-	# #stop command when we are done working
-	# ser.write(b'\xAD') #stop
-	# ser.close()
-	# GPIO.cleanup()
+    # print("exit")
+    # #safe mode then stop
+    # time.sleep(0.2)
+    # ser.write(b'\x83')#safe mode, must be in safe mode before stopping
+    # time.sleep(0.2)
+    # ser.write(b'\x92\x00\x00\00\00') #wheel speed of 0
+    # time.sleep(0.2)
+    # #stop command when we are done working
+    # ser.write(b'\xAD') #stop
+    # ser.close()
+    # GPIO.cleanup()
 
 if __name__ == "__main__":
-	roomba = Create2("/dev/ttyUSB0", 115200)
-	disinfect_keyboard(roomba)
+    roomba = Create2("/dev/ttyUSB0", 115200)
+    disinfect_keyboard(roomba)
