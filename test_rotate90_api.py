@@ -1,11 +1,11 @@
 from pycreate2 import Create2
 import time
 
-def showBattery():
-    sensor = roomba.get_sensors()
+def showBattery(sensor):
+    # sensor = roomba.get_sensors()
     print(sensor.battery_charge)
     print(sensor.battery_capacity)
-    print("battery: ", sensor.battery_capacity*100/3000, "%")
+    print("battery: {}%".format(str(sensor.battery_charge*100/sensor.battery_capacity)[0:4]))
 
 roomba = Create2('/dev/ttyUSB0', 115200)
 roomba.start()
@@ -29,6 +29,7 @@ def rotate90(clockwise): # rotate 90 deg
         roomba.drive_direct(DRIVE_SPEED, -DRIVE_SPEED)
         while angleRotated < 90:
             sensors = roomba.get_sensors()
+            showBattery(sensors)
             print(sensors.angle)
             time.sleep(.1)
             angleRotated += abs(sensors.angle)

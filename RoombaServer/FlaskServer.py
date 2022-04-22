@@ -68,8 +68,9 @@ def receiver(num, client_socket, client_addr):
         ############# IF DEBUG ON PC, QUOTE BELOW###############
         if data[:4] == "auto" or data[:4] == "manu":
             sensors = bot.get_sensors()
-            battery = sensors.battery_capacity
-            client_socket.send((str(int(battery) / 3000 * 100)[:2] + "%" + "\n").encode())
+            batteryNow = sensors.battery_charge
+            batteryMax = sensors.battery_capacity
+            client_socket.send((str(int(batteryNow*100/batteryMax))[:2] + "%" + "\n").encode())
             if data[:4] == "auto":
                 switch(_pause=False)
             else:

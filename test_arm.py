@@ -1,5 +1,5 @@
 import serial
-import time 
+import time
 
 ser=serial.Serial(port='/dev/ttyS0',
                   baudrate=9600,
