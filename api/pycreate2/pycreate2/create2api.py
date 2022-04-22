@@ -186,6 +186,18 @@ class Create2(object):
         data = struct.unpack('4B', struct.pack('>2h', r_pwm, l_pwm))  # write do this?
         self.SCI.write(OPCODES.DRIVE_PWM, data)
 
+    def start_main_brush(self):
+        """
+        Only turn on main brush motor
+        See manual "Motors" section (OPCODE 138)
+        """
+        # roomba.write(b'\x8A\x04')
+        self.SCI.write(OPCODES.MOTORS, (4,))
+    
+    def stop_main_brush(self):
+        # roomba.write(b'\x8A\x00')
+        self.SCI.write(OPCODES.MOTORS, (0,))
+
     # ------------------------ LED ----------------------------
 
     def led(self, led_bits=0, power_color=0, power_intensity=0):
