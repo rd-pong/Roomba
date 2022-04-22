@@ -5,6 +5,8 @@ import RPi.GPIO as GPIO
 import qwiic_vl53l1x
 import qwiic_tca9548a
 import cv2
+from threading import Thread
+# x92 to x91
 
 sysRunning_flag = True
 
@@ -368,6 +370,23 @@ def getObjects(frame,thres,nms,draw=True,objects=[]):
                     
     return frame,objectInfo,robotMode
 
+def cleanKeybord():
+	global is_cleaning
+	is_cleaning = True
+	print("Cleaning with arm for 6 sec")
+	#armClean()
+	stop()
+	time.sleep(6)
+	global lastKeyboardDisinfectTime
+	lastKeyboardDisinfectTime = time.time()
+	global is_cleaning_fin
+	is_cleaning_fin = True
+	global cleaning_thread
+	cleaning_thread = Thread(target = cleanKeybord)
+
+
+cleaning_thread = Thread(target = cleanKeybord)
+
 GPIO.setmode(GPIO.BCM)   #set up GPIO pins
 # GPIO.setup(27, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 #GPIO.setup(trigPin, GPIO.OUT, initial = GPIO.LOW)
@@ -397,14 +416,20 @@ robotMode = 1 # If True, robot will wander in cleanmode to look for table. if fa
 stopDisinfection = False # set to True if entire table has been disinfected, verified by bump and prox sensors, or if error is predicted
 lastKeyboardDisinfectTime = -10 # Set to -10s ago
 
+is_cleaning = False
+is_cleaning_fin = True
+
 try:
 	while (sysRunning_flag):
 		#time.sleep(1)
 		_, frame = cap.read()
 		#frame = cv2.flip(frame, -1)
+		lastMode = robotMode
 		result,objectInfo,robotMode = getObjects(frame,0.5,0.2,objects=["keyboard"])
+		if is_cleaning:
+			robotMode = lastMode
 		print("Current robotMode =",robotMode)
-		cv2.imshow('Output', result)
+		cv2.imshow('Output', frame)
 		#print(found)
 		cv2.waitKey(1)
 		
@@ -439,13 +464,16 @@ try:
 			time.sleep(2)
 			
 		# Disinfect
-		elif robotMode == 5 and time.time() - lastKeyboardDisinfectTime > 5:
+		elif robotMode == 5 and time.time() - lastKeyboardDisinfectTime > 15 and is_cleaning_fin:
+			is_cleaning_fin = False 
 			stop()
 			time.sleep(0.5)
-			print("cleaning with arm for 6 sec")
-			armClean()
-			time.sleep(6)
-			rotate_cw_5()
+			#print("cleaning with arm for 6 sec")
+			#armClean()
+			#time.sleep(6)
+			cleaning_thread.start()
+			# cleaning_thread.join()
+			# rotate_cw_5()
 			lastKeyboardDisinfectTime = time.time()
 
 

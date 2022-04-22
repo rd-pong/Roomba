@@ -74,7 +74,7 @@ def getObjects(frame,thres,nms,draw=True,objects=[]):
     return frame,objectInfo,found
 
 if __name__ == "__main__":
-    cap = cv2.VideoCapture(-1)
+    cap = cv2.VideoCapture(1)
     cap.set(3, 320)
     cap.set(4, 320)
     oldtime = 0

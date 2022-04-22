@@ -83,7 +83,7 @@ if __name__ == "__main__":
     while True:
         newtime = time.time()
         _, frame = cap.read()
-        frame = cv2.flip(frame, -1)
+       # frame = cv2.flip(frame, -1)
         result,objectInfo,found = getObjects(frame,0.5,0.2,objects=["keyboard"])
         print(found)
         #cv2.rectangle(frame,[10,50,160,320],color=(0,0,255))

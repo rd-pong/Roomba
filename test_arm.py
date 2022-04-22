@@ -17,4 +17,16 @@ time.sleep(5)
 ser.write(b'\x55\x55\x05\x06\x00\x01\x00')
 time.sleep(5)
 
+ser.write(b'\x55\x55\x05\x06\x03\x01\x00')
+time.sleep(5)
+
+ser.write(b'\x55\x55\x05\x06\x04\x01\x00')
+time.sleep(5)
+
+ser.write(b'\x55\x55\x05\x06\x05\x01\x00')
+time.sleep(5)
+
+ser.write(b'\x55\x55\x05\x06\x00\x01\x00')
+time.sleep(5)
+
 ser.close()
