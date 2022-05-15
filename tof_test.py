@@ -3,6 +3,7 @@ import qwiic_tca9548a
 import time
 
 mux = qwiic_tca9548a.QwiicTCA9548A()
+print(mux.connected)
 
 mux.disable_all()
 mux.enable_channels(1)

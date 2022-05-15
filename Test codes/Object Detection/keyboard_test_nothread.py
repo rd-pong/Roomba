@@ -166,33 +166,37 @@ def disinfect_keyboard(_roomba):
     try:
         while True:
             _, frame = cap.read()
+            cv2.imshow('Output', frame)
+            cv2.waitKey(1)
 
 
             if clean_process:
                 # cv2.imshow('Output', frame)
                 # cv2.waitKey(1)
-                cv2.destroyWindow('Output')
+                # cv2.destroyWindow('Output')
                 
 
                 if is_cleaning:
                     cleanKeyboard()
                     is_cleaning = False
                     print("Searching other keyboard")
-                    # _, frame = cap.read()
-                    # cv2.imshow('Output', frame)
-                    # cv2.waitKey(1)
                     rotate180()
                     clean_process = False
-                    # sleep for 5 sec to let the camera update
-                    print("Sleeping for 5 sec to update frame")
-                    time.sleep(5)
+
+                    #clear the old frame
                     cap.release()
+                    cap = cv2.VideoCapture(-1)
+                    cap.set(3, 320)
+                    cap.set(4, 320)
+                    _, frame = cap.read()
+
             
 
             else:
+                # _, frame = cap.read()
                 result, objectInfo, robotMode = getObjects(frame, 0.5, 0.2, objects=["keyboard"])
-                cv2.imshow('Output', result)
-                cv2.waitKey(1)
+                # cv2.imshow('Output', result)
+                # cv2.waitKey(1)
 
                 # No keyboard detected
                 if robotMode == 1:
@@ -215,14 +219,14 @@ def disinfect_keyboard(_roomba):
                     rotate5(0)
 
                 # Disinfect keyboard
-                elif robotMode == 5 and time.time() - lastKeyboardDisinfectionTime > 15:
+                elif robotMode == 5 and time.time() - lastKeyboardDisinfectionTime > 10:
                     roomba.drive_stop()
                     print("Start disinfecting keyboard...")
                     clean_process = True
                     is_cleaning = True
                 
             # release cap
-            cap.release()
+            # cap.release()
                          
 
 

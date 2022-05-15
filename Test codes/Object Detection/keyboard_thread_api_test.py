@@ -4,6 +4,7 @@ last modified date: 2022/04/06
 '''
 
 import binascii
+from cv2 import rotate
 import serial
 import time
 import RPi.GPIO as GPIO
@@ -152,7 +153,6 @@ def cleanKeybord():
     # time.sleep(5)
 
     # rotate180(1)
-    rotateCCW_10s()
 
     # armSearchKeyboard()
     # time.sleep(5)
@@ -207,12 +207,14 @@ def getObjects(frame,thres,nms,draw=True,objects=[]):
 
 
 cleaning_thread = Thread(target = cleanKeybord)
-rotate_cw_thread = Thread(target = rotate5, args=(0,))
-rotate_ccw_thread = Thread(target = rotate5, args=(1,))
+rotate180_thread = Thread(target = rotate180, args = (1,))
+# rotate_cw_thread = Thread(target = rotate5, args=(0,))
+# rotate_ccw_thread = Thread(target = rotate5, args=(1,))
 
 
 def disinfect_keyboard(_roomba):
     global cleaning_thread
+    global rotate180_thread
     global rotate_cw_thread
     global rotate_ccw_thread
     global roomba
@@ -248,16 +250,15 @@ def disinfect_keyboard(_roomba):
 
     try:
         while True:
-            print("Robot mode: ", robotMode)
+            _, frame = cap.read()
 
             # View camera
-            _, frame = cap.read()
-            lastMode = robotMode
-            result,objectInfo,robotMode = getObjects(frame,0.5,0.2,objects=["keyboard"])
-            if is_cleaning:
-                robotMode = lastMode
-            cv2.imshow('Output', frame)
-            #print(found)
+            if rotate180_thread.is_alive():
+                result,objectInfo,robotMode = getObjects(frame,0.5,0.2,objects=["keyboard"])
+            else:
+                result = frame
+
+            cv2.imshow('Output', result)
             cv2.waitKey(1)
         
             # No keyboard found
@@ -279,26 +280,28 @@ def disinfect_keyboard(_roomba):
                 # armSearchKeyboard()
                 # time.sleep(5)
                 print("rotate cw")
-                if not rotate_cw_thread.is_alive():
-                    try:
-                        rotate_cw_thread.start()
-                    except RuntimeError:
-                        rotate_cw_thread = Thread(target = rotate5, args=(1,))
-                        rotate_cw_thread.start()
-                time.sleep(0.5)
+                rotate5(1)
+                # if not rotate_cw_thread.is_alive():
+                #     try:
+                #         rotate_cw_thread.start()
+                #     except RuntimeError:
+                #         rotate_cw_thread = Thread(target = rotate5, args=(1,))
+                #         rotate_cw_thread.start()
+                # time.sleep(0.5)
             
             # Steer left
             elif robotMode == 4:
                 # armSearchKeyboard()
                 # time.sleep(5)
                 print("rotate ccw")
-                if not rotate_ccw_thread.is_alive():
-                    try:
-                        rotate_ccw_thread.start()
-                    except RuntimeError:
-                        rotate_ccw_thread = Thread(target = rotate5, args=(0,))
-                        rotate_ccw_thread.start()
-                time.sleep(0.5)
+                rotate5(0)
+                # if not rotate_ccw_thread.is_alive():
+                #     try:
+                #         rotate_ccw_thread.start()
+                #     except RuntimeError:
+                #         rotate_ccw_thread = Thread(target = rotate5, args=(0,))
+                #         rotate_ccw_thread.start()
+                # time.sleep(0.5)
             
             # Disinfect
             elif robotMode == 5 and time.time() - lastKeyboardDisinfectTime > 15 and is_cleaning_fin:
@@ -311,9 +314,19 @@ def disinfect_keyboard(_roomba):
                     except RuntimeError:
                         cleaning_thread = Thread(target = cleanKeybord)
                         cleaning_thread.start()
-
-                time.sleep(13)
                 lastKeyboardDisinfectTime = time.time()
+
+
+            if not cleaning_thread.is_alive():
+                if not rotate180_thread.is_alive():
+                    try:
+                        rotate180_thread.start()
+                    except RuntimeError:
+                        rotate180_thread = Thread(target = rotate180, args = (1,))
+                        rotate180_thread.start()
+                   
+
+                    
             
             
 
