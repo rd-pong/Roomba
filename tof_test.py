@@ -1,9 +1,11 @@
 import qwiic_vl53l1x
 import qwiic_tca9548a
+# import qwiic
 import time
 
 mux = qwiic_tca9548a.QwiicTCA9548A()
-print(mux.connected)
+print("Is connected?", mux.is_connected())
+print(mux.list_channels())
 
 mux.disable_all()
 mux.enable_channels(1)

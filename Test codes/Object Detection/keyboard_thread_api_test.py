@@ -1,6 +1,7 @@
 '''
 cc2396
 last modified date: 2022/04/06
+status: freezing images
 '''
 
 import binascii

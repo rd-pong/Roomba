@@ -50,7 +50,7 @@ def getObjects(frame,thres,nms,draw=True,objects=[]):
                     object_ratio = (box[2]*box[3])/(320*320)
                     # if less than 0.4, move forward, else lean arm forward
                     if object_ratio < 0.4:
-                        print("forward")
+                        print("move forward")
                     else:
                         print("move arm")
                     
@@ -84,8 +84,10 @@ if __name__ == "__main__":
         newtime = time.time()
         _, frame = cap.read()
        # frame = cv2.flip(frame, -1)
+        # start_time = time.time()
         result,objectInfo,found = getObjects(frame,0.5,0.2,objects=["keyboard"])
-        print(found)
+        # print("image process time: ", time.time() - start_time)
+        # print(found)
         #cv2.rectangle(frame,[10,50,160,320],color=(0,0,255))
         fps = 1 / (newtime - oldtime)
         oldtime = newtime
