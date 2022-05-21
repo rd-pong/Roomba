@@ -12,9 +12,9 @@ time.sleep(1)
 
 try:
     print("Motor moving ...")
-    roomba.write(b'\x8A\x04')
+    roomba.write(b'\x8A\x04')  # start main brush motor only
     time.sleep(5)
-    roomba.write(b'\x8A\x00')
+    roomba.write(b'\x8A\x00')  # stop all motors
     roomba.write(b'\x83')  # safe mode
 except KeyboardInterrupt:
     print("Exit - from keyboard")

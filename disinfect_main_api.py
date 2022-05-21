@@ -12,7 +12,6 @@ ROTATE_SPEED = 50
     drive roomba rotate 90 degrees
     in clockwise direction or counterclockwise direction
 """
-
 def rotate90(clockwise): # rotate 90 deg
     sensors = roomba.get_sensors()
     angleRotated = 0 # variable to calculated amount of rotation
@@ -34,6 +33,7 @@ def rotate90(clockwise): # rotate 90 deg
     roomba.drive_stop()
 
 """
+# Another way to rotate 90 degrees
 def rotate90(clockwise):
     if clockwise == 0: # ccw
         print("Rotate ccw")
@@ -230,69 +230,27 @@ def getLeftTof(): # Measure using left ToF sensor, return 1 if Roomba is under t
 """
 def armUp():
     print("Move robot arm to up position")
+    arm.write(b'\x55\x55\x02\x07')
+    time.sleep(1)
     arm.write(b'\x55\x55\x05\x06\x02\x01\x00')
 
 
 def armDown():
     print("Move robot arm to down position")
+    arm.write(b'\x55\x55\x02\x07')
+    time.sleep(1)
     arm.write(b'\x55\x55\x05\x06\x01\x01\x00')
 
 
 def armStorage():
     print("Move robot arm to storage position")
+    arm.write(b'\x55\x55\x02\x07')
+    time.sleep(1)
     arm.write(b'\x55\x55\x05\x06\x00\x01\x00')
 
 
-def switch(_pause):
-    global pause
-    pause = _pause
-    print("pause: ", pause)
-
-########################################################################
-
-pause = True
-
-#LESSON: MUST PUT INTO SAFE MODE BEFORE STOP COMMAND 
-# roomba=serial.Serial(port='/dev/ttyUSB0',baudrate=115200)
-# roomba.flushOutput()
-
-# Arm setup
-arm = serial.Serial(port='/dev/ttyS0',
-                    baudrate=9600,
-                    parity=serial.PARITY_NONE,
-                    stopbits=serial.STOPBITS_ONE,
-                    bytesize=serial.EIGHTBITS,
-                    timeout=1)
-
-# TOF sensor setup
-mux = qwiic_tca9548a.QwiicTCA9548A()
-
-mux.disable_all()
-mux.enable_channels(1)
-ToF = qwiic_vl53l1x.QwiicVL53L1X()
-ToF.sensor_init()
-if ToF.sensor_init() == None:                  # Begin returns 0 on a good init
-    print("Sensor front online!")
-ToF.set_distance_mode(2)
-
-mux.disable_all()
-mux.enable_channels(6)
-ToF.sensor_init()
-if ToF.sensor_init() == None:                  # Begin returns 0 on a good init
-    print("Sensor 6 right online!")
-ToF.set_distance_mode(2)
-
-mux.disable_all()
-mux.enable_channels(7)
-ToF.sensor_init()
-if ToF.sensor_init() == None:                  # Begin returns 0 on a good init
-    print("Sensor 7 left online!")
-ToF.set_distance_mode(2)
-
-
-def disinfect(_roomba):
-    global roomba, stopDisinfection
-    roomba = _roomba
+def tableDisinfection(roomba):
+    global stopDisinfection
 
     time.sleep(1)
     roomba.start()
@@ -310,10 +268,6 @@ def disinfect(_roomba):
 
     try:
         while True:
-            if (pause):
-                time.sleep(1)
-                continue
-
             if robotMode == 1:
             # Set to clean mode
                 armDown()
@@ -415,6 +369,40 @@ def disinfect(_roomba):
 
 
 if __name__ == "__main__":
-    roomba = Create2("/dev/ttyUSB0", 115200)
-    pause = False
-    disinfect(roomba)
+    #### Arm setup start ###
+    arm = serial.Serial(port='/dev/ttyS0',
+                        baudrate=9600,
+                        parity=serial.PARITY_NONE,
+                        stopbits=serial.STOPBITS_ONE,
+                        bytesize=serial.EIGHTBITS,
+                        timeout=1)
+    #### Arm setup end ###
+
+    ### TOF distance sensor setup start ###
+    mux = qwiic_tca9548a.QwiicTCA9548A()
+
+    mux.disable_all()
+    mux.enable_channels(1)
+    ToF = qwiic_vl53l1x.QwiicVL53L1X()
+    ToF.sensor_init()
+    if ToF.sensor_init() == None:
+        print("Sensor 1 front online!")
+    ToF.set_distance_mode(2)
+
+    mux.disable_all()
+    mux.enable_channels(6)
+    ToF.sensor_init()
+    if ToF.sensor_init() == None:
+        print("Sensor 6 right online!")
+    ToF.set_distance_mode(2)
+
+    mux.disable_all()
+    mux.enable_channels(7)
+    ToF.sensor_init()
+    if ToF.sensor_init() == None:
+        print("Sensor 7 left online!")
+    ToF.set_distance_mode(2)
+    ### TOF distance sensor setup end ###
+
+    roomba = Create2("/dev/ttyUSB0", 115200)  # set up roomba
+    tableDisinfection(roomba)  # start disinfection
