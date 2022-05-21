@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_5"
+            android:title="General Panel" />
+        <item
+            android:id="@+id/nav_1"
+            android:title="Beep Control" />
+        <item
+            android:id="@+id/nav_4"
+            android:title="Manual Control" />
+        <item
+            android:id="@+id/nav_6"
+            android:title="Random Walk" />
+        <item
+            android:id="@+id/nav_2"
+            android:title="Setting" />
+        <item
+            android:id="@+id/nav_3"
+            android:title="Log out" />
+
+
+    </group>
+
+</menu>

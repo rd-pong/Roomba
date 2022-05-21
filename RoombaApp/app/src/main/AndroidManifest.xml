@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.roombaapp">
+
+    <application
+        android:name="com.example.roombaapp.MyApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_config"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+<!--        <activity-->
+<!--            android:name="com.example.roombaapp.Login"-->
+<!--            android:exported="true">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+<!--        </activity>-->
+<!--        <activity-->
+<!--            android:exported="true"-->
+<!--            android:name="com.example.roombaapp.Searching"-->
+<!--            android:label="Searching"></activity>-->
+        <activity
+            android:exported="true"
+            android:name="com.example.roombaapp.Searching"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:exported="true"
+            android:name="com.example.roombaapp.BeepControl"
+            android:label="Beep Control"></activity>
+        <activity
+            android:exported="true"
+            android:name="com.example.roombaapp.Setting"
+            android:label="Setting"></activity>
+        <activity
+            android:exported="true"
+            android:name="com.example.roombaapp.ManualControl"
+            android:label="Manual Control"></activity>
+        <activity
+            android:exported="true"
+            android:name="com.example.roombaapp.GeneralPanel"
+            android:label="General Panel"></activity>
+        <activity
+            android:exported="true"
+            android:name="com.example.roombaapp.RandomWalk"
+            android:label="Random Walk"></activity>
+    </application>
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+</manifest>
