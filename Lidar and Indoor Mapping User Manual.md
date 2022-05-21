@@ -1,4 +1,4 @@
-# Appendix C Lidar and Indoor Mapping User Manual
+# Lidar and Indoor Mapping User Manual
 
 # System Requirements
 

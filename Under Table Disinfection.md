@@ -1,4 +1,4 @@
-# Appendix B: Under Table Disinfection User Manual
+# Under Table Disinfection User Manual
 
 # Run the Code
 
