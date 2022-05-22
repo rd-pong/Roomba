@@ -2,14 +2,11 @@
 @author: cc2396
 @date: 2022-05-05
 @description: disinfect keyboard with threads
-@status: working but having problems with the arm
+@status: 
 '''
 
-import binascii
 import serial
 import time
-import qwiic_vl53l1x
-import qwiic_tca9548a
 import cv2
 from pycreate2 import Create2
 import threading
@@ -42,7 +39,7 @@ class KeyboardDisinfectThreads(object):
         self.init_detection()
 
         # initialize the arm
-        self.arm = serial.Serial(port='/dev/ttys0',
+        self.arm = serial.Serial(port='/dev/ttyS0',
                                   baudrate=9600,
                                   parity=serial.PARITY_NONE,
                                   stopbits=serial.STOPBITS_ONE,
@@ -60,9 +57,9 @@ class KeyboardDisinfectThreads(object):
         configPath = 'graph.pbtxt'
         weightsPath = 'frozen_inference_graph.pb'
 
-        self.net = cv2.dnn_DetectionModel(weightsPath,configPath)
-        self.net.setInputSize(320,320)
-        self.net.setInputScale(1.0/ 127.5)
+        self.net = cv2.dnn_DetectionModel(weightsPath, configPath)
+        self.net.setInputSize(320, 320)
+        self.net.setInputScale(1.0/127.5)
         self.net.setInputMean((127.5, 127.5, 127.5))
         self.net.setInputSwapRB(True)
         # print("Detection model initialized")
@@ -80,32 +77,35 @@ class KeyboardDisinfectThreads(object):
     
     # rotate the roomba, rotate left/right for 5 degrees or rotate 180 degrees
     def rotate(self, direction):
-        angle = 0
+        sensors = self.roomba.get_sensors()
+        angleRotated = 0
 
         # rotate right
         if direction == 'right':
+            print("Steer right for alignment.")
             self.roomba.drive_direct(-20, 20)
-            while angle < 5:        
+            while angleRotated < 5:        
                 sensors = self.roomba.get_sensors()
-                angle += abs(sensors.angle)
-                print("Steer right for alignment, angle rotated:", angle)
+                angleRotated += abs(sensors.angle)
+                # print("Steer right for alignment, angle rotated:", angle)
         # rotate left
         elif direction == 'left':
+            print("Steer left fot alignment.")
             self.roomba.drive_direct(20, -20)
-            while angle < 5:
+            while angleRotated < 5:
                 sensors = self.roomba.get_sensors()
-                angle += abs(sensors.angle)
-                print("Steer left fot alignment, angle rotated:", angle)
+                angleRotated += abs(sensors.angle)
+                # print("Steer left fot alignment, angle rotated:", angle)
         # rotate 180
         elif direction == '180':
+            print("Rotate 180 degrees.")
             self.roomba.drive_direct(-20, 20)
-            while angle < 180:
+            while angleRotated < 180:
                 sensors = self.roomba.get_sensors()
-                angle += abs(sensors.angle)
-                print("Rotate 180 degrees, angle rotated:", angle)
+                angleRotated += abs(sensors.angle)
+                # print("Rotate 180 degrees, angle rotated:", angle)
 
         self.roomba.drive_stop()
-
 
     # initialize the rotate_thread
     def rotate_thread(self, direction):
@@ -122,26 +122,31 @@ class KeyboardDisinfectThreads(object):
             self.camera_thread = threading.Timer(0.01, self.camera_update)
             self.camera_thread.start()
 
-
     # arm positions
     def armStorage(self):
         print("Move the arm to storage position")
+        self.arm.write(b'\x55\x55\x02\x07')
+        time.sleep(1)
         self.arm.write(b'\x55\x55\x05\x06\x00\x01\x00')
     
     def armSearchKeyboard(self):
         print("Move the arm to search keyboard position")
+        self.arm.write(b'\x55\x55\x02\x07')
+        time.sleep(1)
         self.arm.write(b'\x55\x55\x05\x06\x03\x01\x00')
 
     def armCleanKeyboardStart(self):
         print("Move the arm to cleaning keyboard start position")
+        self.arm.write(b'\x55\x55\x02\x07')
+        time.sleep(1)
         self.arm.write(b'\x55\x55\x05\x06\x04\x01\x00')
 
     def armCleanKeyboardEnd(self):
         print("Move the arm to cleaning keyboard end position")
+        self.arm.write(b'\x55\x55\x02\x07')
+        time.sleep(1)
         self.arm.write(b'\x55\x55\x05\x06\x05\x01\x00')
     
-
-
     # detect function, return the robotMode 
     def getObjects(self, thres, nms, draw=True, objects=[]):
         net = self.net
@@ -162,6 +167,7 @@ class KeyboardDisinfectThreads(object):
 
                     if (draw):
                         x_mid = box[0] + box[2]/2
+                        print("Keyboard position on screen: ", x_mid)
                         object_ratio = (box[2]*box[3])/(320*320)
 
                         # steer left
@@ -195,37 +201,33 @@ class KeyboardDisinfectThreads(object):
                 # no keyboard found (robotMode=1)
                 if self.cur_mode == self.modes['no_KBD_found']:
                     self.move()
-                    print('no keyboard found...')
+                    print('No keyboard found...')
 
                 # keyboard found, move slowly (robotMode=2)
                 elif self.cur_mode == self.modes['found_KBD']:
                     self.move()
-                    print("found keyboard")
+                    print("Found keyboard")
 
                 # steer right (robotMode=3)
                 elif self.cur_mode == self.modes['steer_right']:
-                    print('steer right')
+                    print('Steer right')
                     self.rotate_thread('right')
 
                 # steer left (robotMode=4)
                 elif self.cur_mode == self.modes['steer_left']:
-                    print('steer left')
+                    print('Steer left')
                     self.rotate_thread('left')
 
                 # disinfect the keyboard (robotMode=5)
                 elif self.cur_mode == self.modes['clean_KBD']:
                     self.stop_move()
                     print("Cleaning keyboard...")
-                    '''
-                    Here is the robot arm cleaning process, but having issues with the arm
                     self.armCleanKeyboardStart()
-                    time.sleep(5)
+                    time.sleep(8)
                     self.armCleanKeyboardEnd()
-                    time.sleep(5)
+                    time.sleep(8)
                     self.armSearchKeyboard()
-                    time.sleep(5)
-                    '''
-                    time.sleep(10) # set 10 seconds to pretend cleaning the keyboard
+                    time.sleep(8)
                     print('Finished cleaning!')
                     print('Start rotating 180 degrees...')
                     self.rotate_thread('180')
@@ -240,6 +242,14 @@ class KeyboardDisinfectThreads(object):
             self.roomba.drive_stop()
             self.roomba.safe()
             self.armStorage()
+            time.sleep(5)
+        
+        # except KeyboardInterrupt:
+        #     self.system_running = False
+        #     self.roomba.drive_stop()
+        #     self.roomba.safe()
+        #     self.armStorage()
+        #     time.sleep(5)
             
         finally:
             self.camera.release()
