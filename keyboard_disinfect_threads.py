@@ -2,7 +2,7 @@
 @author: cc2396
 @date: 2022-05-05
 @description: disinfect keyboard with threads
-@status: 
+@status: works fine
 '''
 
 import serial
@@ -169,15 +169,17 @@ class KeyboardDisinfectThreads(object):
                         x_mid = box[0] + box[2]/2
                         print("Keyboard position on screen: ", x_mid)
                         object_ratio = (box[2]*box[3])/(320*320)
+                        print("Keyboard ratio in screen: ", object_ratio)
 
                         # steer left
                         if x_mid < 100:
-                            robotMode = 4   
+                            robotMode = 4
                         # steer right
                         elif x_mid > 220:
-                            robotMode = 3   
+                            robotMode = 3
                         # found keyboard, move slowly
-                        elif object_ratio < 0.3:
+                        # this ratio should be adjusted if arm position changed
+                        elif object_ratio < 0.25:
                             robotMode = 2  
                         # clean keyboard
                         else:
@@ -236,21 +238,15 @@ class KeyboardDisinfectThreads(object):
                     print("Error: Unknown mode!")
                     self.system_running = False
 
-        except Exception as e:
-            print(e)
+        except KeyboardInterrupt:
+            self.camera.release()
+            cv2.destroyAllWindows()
             self.system_running = False
             self.roomba.drive_stop()
             self.roomba.safe()
             self.armStorage()
             time.sleep(5)
-        
-        # except KeyboardInterrupt:
-        #     self.system_running = False
-        #     self.roomba.drive_stop()
-        #     self.roomba.safe()
-        #     self.armStorage()
-        #     time.sleep(5)
-            
+
         finally:
             self.camera.release()
             cv2.destroyAllWindows()
