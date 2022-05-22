@@ -90,7 +90,7 @@ class KeyboardDisinfectThreads(object):
                 # print("Steer right for alignment, angle rotated:", angle)
         # rotate left
         elif direction == 'left':
-            print("Steer left fot alignment.")
+            print("Steer left for alignment.")
             self.roomba.drive_direct(20, -20)
             while angleRotated < 5:
                 sensors = self.roomba.get_sensors()
